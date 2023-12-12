@@ -1,0 +1,51 @@
+-- 3. Interest Analysis
+-- Solution
+-- Which interests have been present in all month_year dates in our dataset?
+/*
+SELECT 
+  COUNT(DISTINCT month_year) AS unique_month_year_count, 
+  COUNT(DISTINCT interest_id) AS unique_interest_id_count
+FROM fresh_segments.interest_metrics;
+
+WITH interest_cte AS (
+SELECT 
+  interest_id, 
+  COUNT(DISTINCT month_year) AS total_months
+FROM fresh_segments.interest_metrics
+WHERE month_year IS NOT NULL
+GROUP BY interest_id
+)
+
+SELECT 
+  c.total_months,
+  COUNT(DISTINCT c.interest_id)
+FROM interest_cte c
+WHERE total_months = 14
+GROUP BY c.total_months
+ORDER BY count DESC;
+*/
+-- Using this same total_months measure - calculate the cumulative percentage of all records starting at 14 months - which total_months value passes the 90% cumulative percentage value?
+/*
+WITH cte_interest_months AS (
+SELECT
+  interest_id,
+  MAX(DISTINCT month_year) AS total_months
+FROM fresh_segments.interest_metrics
+WHERE interest_id IS NOT NULL
+GROUP BY interest_id
+),
+cte_interest_counts AS (
+  SELECT
+    total_months,
+    COUNT(DISTINCT interest_id) AS interest_count
+  FROM cte_interest_months
+  GROUP BY total_months
+)
+
+SELECT
+  total_months,
+  interest_count,
+  ROUND(100 * SUM(interest_count) OVER (ORDER BY total_months DESC) / -- Create running total field using cumulative values of interest count
+      (SUM(INTEREST_COUNT) OVER ()),2) AS cumulative_percentage
+FROM cte_interest_counts;
+*/
